@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineVault - Movies & Series</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    body { background: #0a0a0a; color: white; font-family: system-ui, sans-serif; }
+    .card { transition: all 0.3s; }
+    .card:hover { transform: scale(1.08); }
+    .hero-bg {
+      background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)), 
+                  url('https://picsum.photos/id/1015/1920/1080') center/cover;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-black sticky top-0 z-50 border-b border-gray-800">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="text-3xl font-bold text-red-600">CineVault</div>
+      
+      <div class="flex gap-6 text-lg">
+        <a href="#" onclick="showSection('home')" class="hover:text-red-500 active">Home</a>
+        <a href="#" onclick="showSection('movies')" class="hover:text-red-500">Movies</a>
+        <a href="#" onclick="showSection('series')" class="hover:text-red-500">Series</a>
+      </div>
+
+      <div class="relative w-64">
+        <input type="text" id="searchInput" 
+               onkeyup="searchContent()"
+               placeholder="Search movies or series..." 
+               class="w-full bg-gray-900 text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-red-600">
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section id="home" class="hero-bg h-screen flex items-center justify-center text-center px-4">
+    <div>
+      <h1 class="text-5xl md:text-6xl font-bold mb-4">Find Your Next Obsession</h1>
+      <p class="text-xl text-gray-300 mb-8">Movies & Series • All in one place</p>
+      <button onclick="showSection('movies')" 
+              class="bg-red-600 hover:bg-red-700 px-8 py-4 rounded-xl text-lg font-semibold transition">
+        Browse Movies
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- Trending -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+        <i class="fas fa-fire text-orange-500"></i> Trending Now
+      </h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="trending"></div>
+    </section>
+
+    <!-- Movies -->
+    <section id="movies-section" class="mb-12">
+      <h2 class="text-2xl font-bold mb-6">Popular Movies</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="movies"></div>
+    </section>
+
+    <!-- Series -->
+    <section id="series-section" class="mb-12 hidden">
+      <h2 class="text-2xl font-bold mb-6">Popular Series</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="series"></div>
+    </section>
+
+  </div>
+
+  <footer class="bg-black py-8 text-center text-gray-500 text-sm">
+    <p>CineVault Demo • Built for mobile development</p>
+    <p class="mt-2">Made with ❤️ for GitHub + Phone</p>
+  </footer>
+
+  <script>
+    // Sample Data
+    const content = {
+      trending: [
+        {title: "Dune: Part Two", year: 2025, rating: "8.9", img: "https://picsum.photos/id/1015/300/400", type: "movie"},
+        {title: "House of the Dragon", year: 2025, rating: "8.8", img: "https://picsum.photos/id/237/300/400", type: "series"},
+        {title: "The Batman", year: 2022, rating: "8.5", img: "https://picsum.photos/id/201/300/400", type: "movie"},
+        {title: "Arcane Season 2", year: 2025, rating: "9.2", img: "https://picsum.photos/id/870/300/400", type: "series"}
+      ],
+      movies: [
+        {title: "Oppenheimer", year: 2023, rating: "8.6", img: "https://picsum.photos/id/870/300/400", type: "movie"},
+        {title: "Interstellar", year: 2014, rating: "8.7", img: "https://picsum.photos/id/1016/300/400", type: "movie"},
+        {title: "The Dark Knight", year: 2008, rating: "9.0", img: "https://picsum.photos/id/201/300/400", type: "movie"},
+        {title: "Inception", year: 2010, rating: "8.8", img: "https://picsum.photos/id/133/300/400", type: "movie"},
+        {title: "Furiosa", year: 2024, rating: "7.9", img: "https://picsum.photos/id/1018/300/400", type: "movie"}
+      ],
+      series: [
+        {title: "The Last of Us", year: 2023, rating: "8.8", img: "https://picsum.photos/id/237/300/400", type: "series"},
+        {title: "Stranger Things", year: 2025, rating: "8.7", img: "https://picsum.photos/id/201/300/400", type: "series"},
+        {title: "The Boys", year: 2024, rating: "8.7", img: "https://picsum.photos/id/133/300/400", type: "series"},
+        {title: "Shogun", year: 2024, rating: "8.9", img: "https://picsum.photos/id/1015/300/400", type: "series"}
+      ]
+    };
+
+    // Render Cards
+    function renderCards(containerId, items) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = items.map(item => `
+        <div class="card bg-gray-900 rounded-2xl overflow-hidden cursor-pointer">
+          <img src="${item.img}" class="w-full aspect-[2/3] object-cover">
+          <div class="p-3">
+            <h3 class="font-semibold text-sm line-clamp-2">${item.title}</h3>
+            <div class="flex justify-between text-xs text-gray-400 mt-2">
+              <span>${item.year}</span>
+              <span class="text-yellow-400">★ ${item.rating}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Initialize
+    function init() {
+      renderCards('trending', content.trending);
+      renderCards('movies', content.movies);
+      renderCards('series', content.series);
+    }
+
+    // Search Function
+    function searchContent() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      
+      if (!query) {
+        document.getElementById('movies-section').classList.remove('hidden');
+        document.getElementById('series-section').classList.add('hidden');
+        return;
+      }
+
+      const allContent = [...content.movies, ...content.series];
+      const filtered = allContent.filter(item => 
+        item.title.toLowerCase().includes(query)
+      );
+
+      // Show only in movies section for simplicity
+      renderCards('movies', filtered);
+      document.getElementById('movies-section').classList.remove('hidden');
+      document.getElementById('series-section').classList.add('hidden');
+    }
+
+    // Tab Switching
+    function showSection(section) {
+      document.getElementById('movies-section').classList.toggle('hidden', section !== 'movies');
+      document.getElementById('series-section').classList.toggle('hidden', section !== 'series');
+      
+      if (section === 'home') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Initialize on load
+    window.onload = init;
+  </script>
+</body>
+</html>
